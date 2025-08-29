@@ -58,7 +58,7 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
             if (status == TextToSpeech.SUCCESS) {
                 val configured = TTSHelper.configurePortugueseBrazilianTTS(textToSpeech!!)
                 if (!configured) {
-                    Toast.makeText(this, "Voz em português não está disponível. Instale o pacote de idioma português.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, getString(R.string.tts_portuguese_not_available), Toast.LENGTH_LONG).show()
                 } else {
                     Log.i("TTS", "TTS configurado com sucesso para português brasileiro")
                 }
@@ -67,7 +67,7 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
                 TTSHelper.listPortugueseVoices(textToSpeech!!)
                 
             } else {
-                Toast.makeText(this, "Erro ao inicializar o TTS", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.error_initializing_tts), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -148,7 +148,7 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
         try {
             textToSpeech?.speak(msg, TextToSpeech.QUEUE_FLUSH, null, null)
         } catch (e: Exception) {
-            Toast.makeText(this, "Erro ao falar o texto: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.error_speaking_text, e.message), Toast.LENGTH_SHORT).show()
         }
     }
 

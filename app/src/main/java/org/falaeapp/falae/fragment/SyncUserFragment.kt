@@ -117,7 +117,7 @@ class SyncUserFragment : Fragment() {
                                 } catch (e: Exception) {
                                     Log.e("SyncUserFragment", "Error in onError: ${e.message}", e)
                                     try {
-                                        Toast.makeText(requireContext(), "Erro: ${error.message}", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(requireContext(), getString(R.string.error_generic, error.message), Toast.LENGTH_LONG).show()
                                     } catch (e2: Exception) {
                                         Log.e("SyncUserFragment", "Error showing error toast: ${e2.message}", e2)
                                     }
@@ -129,7 +129,7 @@ class SyncUserFragment : Fragment() {
                     Log.e("SyncUserFragment", "Error in observer: ${e.message}", e)
                     try {
                         if (isAdded && context != null) {
-                            Toast.makeText(requireContext(), "Erro ao processar resposta: ${e.message}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(requireContext(), getString(R.string.error_processing_response, e.message), Toast.LENGTH_LONG).show()
                         }
                     } catch (e2: Exception) {
                         Log.e("SyncUserFragment", "Error showing error toast: ${e2.message}", e2)
@@ -365,7 +365,7 @@ class SyncUserFragment : Fragment() {
                     try {
                         progressDialog?.dismiss()
                         if (isAdded && context != null) {
-                            Toast.makeText(requireContext(), "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(requireContext(), getString(R.string.error_generic, e.message), Toast.LENGTH_LONG).show()
                         }
                     } catch (e2: Exception) {
                         Log.e("SyncUserFragment", "Error handling exception: ${e2.message}", e2)
@@ -379,7 +379,7 @@ class SyncUserFragment : Fragment() {
             try {
                 progressDialog?.dismiss()
                 if (isAdded && context != null) {
-                    Toast.makeText(requireContext(), "Erro crítico: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), getString(R.string.error_critical, e.message), Toast.LENGTH_LONG).show()
                 }
             } catch (e2: Exception) {
                 Log.e("SyncUserFragment", "Error handling critical exception: ${e2.message}", e2)

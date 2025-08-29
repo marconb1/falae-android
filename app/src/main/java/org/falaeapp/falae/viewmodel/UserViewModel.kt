@@ -81,7 +81,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                 // Validar parâmetros
                 if (email.isBlank() || password.isBlank()) {
                     Log.e("UserViewModel", "synchronizeUser - Invalid parameters: email or password is blank")
-                    val exception = IllegalArgumentException("Email ou senha inválidos")
+                    val exception = IllegalArgumentException(getApplication<Application>().getString(org.falaeapp.falae.R.string.invalid_email_password))
                     try {
                         syncAccountEvent.postValue(Event(Pair(null, exception)))
                     } catch (e: Exception) {
@@ -121,7 +121,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                                 } else {
                                     // Caso improvável, mas por segurança
                                     Log.e("UserViewModel", "synchronizeUser - User is null after sync")
-                                    syncAccountEvent.postValue(Event(Pair(null, NullPointerException("Usuário retornado é nulo"))))
+                                    syncAccountEvent.postValue(Event(Pair(null, NullPointerException(getApplication<Application>().getString(org.falaeapp.falae.R.string.user_returned_null)))))
                                 }
                             } catch (e: Exception) {
                                 Log.e("UserViewModel", "synchronizeUser - Error processing success: ${e.message}", e)

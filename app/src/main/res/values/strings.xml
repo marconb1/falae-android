@@ -57,4 +57,12 @@
     <string name="clear_cache">Limpar Cache</string>
     <string name="error_starting_app">Erro ao iniciar o aplicativo: %1$s</string>
     <string name="synchronizing">Sincronizando</string>
+    <string name="tts_portuguese_not_available">Voz em português não está disponível. Instale o pacote de idioma português.</string>
+    <string name="error_initializing_tts">Erro ao inicializar o TTS</string>
+    <string name="error_speaking_text">Erro ao falar o texto: %1$s</string>
+    <string name="invalid_email_password">Email ou senha inválidos</string>
+    <string name="user_returned_null">Usuário retornado é nulo</string>
+    <string name="error_generic">Erro: %1$s</string>
+    <string name="error_processing_response">Erro ao processar resposta: %1$s</string>
+    <string name="error_critical">Erro crítico: %1$s</string>
 </resources>
