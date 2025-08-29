@@ -5,8 +5,13 @@ import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
+import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -15,6 +20,7 @@ import org.falaeapp.falae.fragment.PageFragment
 import org.falaeapp.falae.fragment.ViewPagerItemFragment
 import org.falaeapp.falae.model.Page
 import org.falaeapp.falae.model.SpreadSheet
+import org.falaeapp.falae.util.TTSHelper
 import org.falaeapp.falae.viewmodel.DisplayViewModel
 
 class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
@@ -28,14 +34,49 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_display)
 
+        // Configurar Window Insets para Display Activity
+        setupWindowInsetsForDisplay()
+
+        // Configurar a ActionBar para mostrar o botão de voltar
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeButtonEnabled(true)
+
+        // Registrando o callback para o botão voltar
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+
+                // Usando o método tradicional já que estamos com compileSdk 34
+                @Suppress("DEPRECATION")
+                overridePendingTransition(R.anim.enter_from_left, R.anim.exit_to_right)
+            }
+        })
+
         // Inicializar o TextToSpeech
         textToSpeech = TextToSpeech(this) { status ->
-            if (status != TextToSpeech.SUCCESS) {
+            if (status == TextToSpeech.SUCCESS) {
+                val configured = TTSHelper.configurePortugueseBrazilianTTS(textToSpeech!!)
+                if (!configured) {
+                    Toast.makeText(this, "Voz em português não está disponível. Instale o pacote de idioma português.", Toast.LENGTH_LONG).show()
+                } else {
+                    Log.i("TTS", "TTS configurado com sucesso para português brasileiro")
+                }
+                
+                // Debug: listar vozes portuguesas disponíveis
+                TTSHelper.listPortugueseVoices(textToSpeech!!)
+                
+            } else {
                 Toast.makeText(this, "Erro ao inicializar o TTS", Toast.LENGTH_SHORT).show()
             }
         }
 
-        val spreadSheet: SpreadSheet? = intent.getParcelableExtra(SPREADSHEET)
+        val spreadSheet: SpreadSheet? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(SPREADSHEET, SpreadSheet::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(SPREADSHEET)
+        }
         displayViewModel = ViewModelProvider(this).get(DisplayViewModel::class.java)
         spreadSheet?.let {
             displayViewModel.init(it)
@@ -49,6 +90,31 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
             }
         })
         mediaPlayer = MediaPlayer.create(this, R.raw.click_sound)
+    }
+
+    /**
+     * Configura Window Insets para DisplayActivity (tela de prancha)
+     */
+    private fun setupWindowInsetsForDisplay() {
+        val rootView = findViewById<androidx.constraintlayout.widget.ConstraintLayout>(R.id.display_root)
+            ?: return
+        
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+            val systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val navigationBarsInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            
+            // Para a tela de prancha, aplicar padding nas bordas necessárias
+            view.setPadding(
+                view.paddingLeft,
+                view.paddingTop,
+                view.paddingRight,
+                navigationBarsInsets.bottom
+            )
+            
+            Log.d("DisplayActivity", "Window Insets aplicados - Bottom: ${navigationBarsInsets.bottom}")
+            
+            insets
+        }
     }
 
     private fun changeFragment(page: Page, addToBackStack: Boolean = false) {
@@ -90,12 +156,37 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
         mediaPlayer.start()
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-        overridePendingTransition(R.anim.enter_from_left, R.anim.exit_to_right)
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                // Quando o usuário clica no botão de voltar (ícone da casinha) na ActionBar
+                try {
+                    Log.d("DisplayActivity", "Home button clicked, returning to initial page")
+
+                    // Simplesmente voltar para a página inicial da prancha atual
+                    displayViewModel.init(displayViewModel.getCurrentSpreadSheet())
+
+                    return true
+                } catch (e: Exception) {
+                    Log.e("DisplayActivity", "Error handling home button click: ${e.message}", e)
+
+                    // Em caso de erro, tentar o comportamento padrão de voltar
+                    try {
+                        finish()
+                        @Suppress("DEPRECATION")
+                        overridePendingTransition(R.anim.enter_from_left, R.anim.exit_to_right)
+                        return true
+                    } catch (e2: Exception) {
+                        Log.e("DisplayActivity", "Error in fallback navigation: ${e2.message}", e2)
+                        return super.onOptionsItemSelected(item)
+                    }
+                }
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     companion object {
-        const val SPREADSHEET = "SpreadSheet"
+        const val SPREADSHEET = "SPREADSHEET"
     }
 }
