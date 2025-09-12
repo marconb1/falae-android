@@ -7,10 +7,13 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
+import android.view.Window
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
@@ -33,6 +36,9 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_display)
+
+        // Aplicar modo imersivo para esconder barras do sistema
+        applyImmersiveMode()
 
         // Configurar Window Insets para Display Activity
         setupWindowInsetsForDisplay()
@@ -94,24 +100,16 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
 
     /**
      * Configura Window Insets para DisplayActivity (tela de prancha)
+     * Como estamos usando modo imersivo, não aplicamos padding
      */
     private fun setupWindowInsetsForDisplay() {
         val rootView = findViewById<androidx.constraintlayout.widget.ConstraintLayout>(R.id.display_root)
             ?: return
         
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
-            val systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val navigationBarsInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            
-            // Para a tela de prancha, aplicar padding nas bordas necessárias
-            view.setPadding(
-                view.paddingLeft,
-                view.paddingTop,
-                view.paddingRight,
-                navigationBarsInsets.bottom
-            )
-            
-            Log.d("DisplayActivity", "Window Insets aplicados - Bottom: ${navigationBarsInsets.bottom}")
+            // No modo imersivo, não aplicamos padding para as barras do sistema
+            // pois elas estão ocultas
+            Log.d("DisplayActivity", "Window Insets configurados para modo imersivo")
             
             insets
         }
@@ -183,6 +181,37 @@ class DisplayActivity : AppCompatActivity(), PageFragment.PageFragmentListener,
                 }
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reaplicar modo imersivo quando a atividade volta ao foco
+        applyImmersiveMode()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            // Reaplicar modo imersivo quando a janela ganha foco
+            applyImmersiveMode()
+        }
+    }
+
+    private fun applyImmersiveMode() {
+        try {
+            // Para Android 15 e versões mais recentes, usar flags legados para esconder completamente a barra de navegação
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            )
+        } catch (e: Exception) {
+            Log.e("DisplayActivity", "Erro ao aplicar modo imersivo: ${e.message}")
         }
     }
 

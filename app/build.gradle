@@ -66,8 +66,8 @@ android {
         applicationId "org.falaeapp.falae"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 28
-        versionName "1.0.28"
+        versionCode 30
+        versionName "1.0.30"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Android 15 specific configurations
@@ -81,6 +81,24 @@ android {
     buildFeatures {
         buildConfig true
     }
+
+    // Configuração para suportar múltiplas arquiteturas (ARM, x86, etc.)
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            universalApk false
+        }
+    }
+
+    // Configuração para Android App Bundle (recomendado para Play Store)
+    bundle {
+        abi {
+            enableSplit true
+        }
+    }
+
     testBuildType "debug"
     buildTypes {
         debug {

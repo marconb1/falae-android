@@ -10,6 +10,7 @@ import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
 import android.view.Window
 import android.view.WindowInsetsController
 import android.widget.Toast
@@ -57,14 +58,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             // Configuração moderna para Android 15 Edge-to-Edge
             WindowCompat.setDecorFitsSystemWindows(window, false)
             
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Android 11+ (API 30+) - Manter status bar, configurar navigation bar adequadamente
-                window.insetsController?.let { controller ->
-                    // Para landscape, geralmente queremos ocultar a navigation bar
-                    controller.hide(WindowInsetsCompat.Type.navigationBars())
-                    controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                }
-            }
+            // Aplicar modo imersivo
+            applyImmersiveMode()
         } catch (e: Exception) {
             Log.e("MainActivity", "Erro ao configurar fullscreen: ${e.message}")
         }
@@ -135,6 +130,37 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         userViewModel.handleNewVersion(BuildConfig.VERSION_CODE)
         observeUsers()
         observeLastConnectedUser()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reaplicar modo imersivo quando a atividade volta ao foco
+        applyImmersiveMode()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            // Reaplicar modo imersivo quando a janela ganha foco
+            applyImmersiveMode()
+        }
+    }
+
+    private fun applyImmersiveMode() {
+        try {
+            // Para Android 15 e versões mais recentes, usar flags legados para esconder completamente a barra de navegação
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            )
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Erro ao aplicar modo imersivo: ${e.message}")
+        }
     }
 
     private fun observeLastConnectedUser() {
@@ -209,6 +235,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             )
             .replace(R.id.container, fragment, tag)
             .commit()
+        
+        // Reaplicar modo imersivo após trocar o fragment
+        applyImmersiveMode()
     }
 
     private fun openTTSLanguageSettings() {
